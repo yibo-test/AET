@@ -3,7 +3,7 @@ import time
 import logging
 
 from utils.browser import Browser
-from page.baidu import HomePage, NewsPage
+from page_object.baidu import HomePage, NewsPage
 
 
 class Baidu(unittest.TestCase):
