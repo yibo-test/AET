@@ -9,7 +9,7 @@ from page_object.baidu import HomePage, NewsPage
 class Baidu(unittest.TestCase):
 
     def setUp(self) -> None:
-        self.driver = Browser("firefox")
+        self.driver = Browser("chrome")
         self.driver.open_browser("http://www.baidu.com")
         logging.info("打开浏览器")
         logging.info(f"浏览器名称:{self.driver.browser_name},浏览器版本:{self.driver.browser_version}")
