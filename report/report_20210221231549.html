@@ -7159,13 +7159,13 @@ body.skin-3 {
 
 
     var resultData = {
-    "testPass": 3,
+    "testPass": 4,
     "testResult": [
         {
             "className": "WeatherTest",
             "methodName": "test_get_weather_info",
             "description": " 测试中国气象台接口数据返回正确性 ",
-            "spendTime": "0.0508 s",
+            "spendTime": "0.0625 s",
             "status": "成功",
             "log": [
                 ""
@@ -7175,23 +7175,49 @@ body.skin-3 {
             "className": "FailTest",
             "methodName": "test_sum_error",
             "description": " 1 + 2 = 4？ ",
-            "spendTime": "0.00195 s",
+            "spendTime": "0.0 s",
+            "status": "错误",
+            "log": [
+                "",
+                "Traceback (most recent call last):\n",
+                "  File \"E:\\Programs\\Python\\Python39\\lib\\unittest\\case.py\", line 59, in testPartExecutor\n    yield\n",
+                "  File \"E:\\Programs\\Python\\Python39\\lib\\unittest\\case.py\", line 593, in run\n    self._callTestMethod(testMethod)\n",
+                "  File \"E:\\Programs\\Python\\Python39\\lib\\unittest\\case.py\", line 550, in _callTestMethod\n    method()\n",
+                "  File \"E:\\_git\\selenium_pom\\test_cases\\API\\test_fail_report.py\", line 19, in test_sum_error\n    raise(\"hhhh\")\n",
+                "TypeError: exceptions must derive from BaseException\n"
+            ]
+        },
+        {
+            "className": "FailTest",
+            "methodName": "test_sum_fail",
+            "description": " 1 + 2 = 4？ ",
+            "spendTime": "0.00655 s",
             "status": "失败",
             "log": [
                 "",
                 "Traceback (most recent call last):\n",
-                "  File \"D:\\Programs\\Python\\Python38-32\\lib\\unittest\\case.py\", line 60, in testPartExecutor\n    yield\n",
-                "  File \"D:\\Programs\\Python\\Python38-32\\lib\\unittest\\case.py\", line 676, in run\n    self._callTestMethod(testMethod)\n",
-                "  File \"D:\\Programs\\Python\\Python38-32\\lib\\unittest\\case.py\", line 633, in _callTestMethod\n    method()\n",
-                "  File \"C:\\Users\\User\\PycharmProjects\\selenium_pom\\test_cases\\test_fail_report.py\", line 9, in test_sum_error\n    assert a+b == 4\n",
+                "  File \"E:\\Programs\\Python\\Python39\\lib\\unittest\\case.py\", line 59, in testPartExecutor\n    yield\n",
+                "  File \"E:\\Programs\\Python\\Python39\\lib\\unittest\\case.py\", line 593, in run\n    self._callTestMethod(testMethod)\n",
+                "  File \"E:\\Programs\\Python\\Python39\\lib\\unittest\\case.py\", line 550, in _callTestMethod\n    method()\n",
+                "  File \"E:\\_git\\selenium_pom\\test_cases\\API\\test_fail_report.py\", line 14, in test_sum_fail\n    assert a+b == 4\n",
                 "AssertionError\n"
+            ]
+        },
+        {
+            "className": "FailTest",
+            "methodName": "test_sum_success",
+            "description": " 1 + 2 = 4？ ",
+            "spendTime": "0.0 s",
+            "status": "成功",
+            "log": [
+                ""
             ]
         },
         {
             "className": "Baidu",
             "methodName": "test_access_game_news",
-            "description": " 用例2：测试通过百度首页能进入新闻界面的游戏专题 ",
-            "spendTime": "11.3 s",
+            "description": " 测试通过百度首页能进入新闻界面的游戏专题 ",
+            "spendTime": "7.58 s",
             "status": "成功",
             "log": [
                 ""
@@ -7200,8 +7226,8 @@ body.skin-3 {
         {
             "className": "Baidu",
             "methodName": "test_search",
-            "description": " 用例1：测试百度搜索框输入selenium能搜索出包含selenium相关的信息 ",
-            "spendTime": "11.0 s",
+            "description": " 测试百度搜索框输入selenium能搜索出包含selenium相关的信息 ",
+            "spendTime": "7.55 s",
             "status": "成功",
             "log": [
                 ""
@@ -7209,10 +7235,10 @@ body.skin-3 {
         }
     ],
     "testName": "基础用例",
-    "testAll": 4,
-    "testFail": 1,
-    "beginTime": "2021-02-19 18:15:15",
-    "totalTime": "22s",
+    "testAll": 6,
+    "testFail": 2,
+    "beginTime": "2021-02-21 23:15:49",
+    "totalTime": "15s",
     "testSkip": 0,
     "testError": 0
 };
