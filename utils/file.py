@@ -28,13 +28,13 @@ def find_file(search_path, find_filename, abspath=False) -> str:
 
 def find_files(search_path, abspath=False, file_endswith=None) -> dict:
     """
-    查找指定目录下所有的文件或指定格式的文件，若不同目录存在相同文件名，只返回第1个文件的路径
+    查找指定目录下所有的文件（不包含以__开头和结尾的文件）或指定格式的文件，若不同目录存在相同文件名，只返回第1个文件的路径
     :param search_path: 查找的目录路径
     :param abspath: 是否返回绝对路径，默认返回相对路径
     :param file_endswith: 指定搜索文件的格式，不指定默认搜索所有文件
     :return: 返回dict类型，key为文件名，value为文件路径
     """
-    filename_filepath = {}
+    file_name_path = {}
     if abspath:
         search_path = os.path.abspath(search_path)
 
@@ -45,17 +45,41 @@ def find_files(search_path, abspath=False, file_endswith=None) -> dict:
             # 如果是文件就保存
             if os.path.isfile(child_path):
                 if file_endswith is None:
-                    filename_filepath.setdefault(filename, child_path)
+                    file_name_path.setdefault(filename, child_path)
                 # 保存指定类型文件
                 elif file_endswith is not None and child_path.endswith(file_endswith):
-                    filename_filepath.setdefault(filename, child_path)
+                    file_name_path.setdefault(filename, child_path)
                 continue
 
             # 如果目录且不是__开头和结尾，则继续查找
             if os.path.isdir(child_path) and not (filename.startswith("__") and filename.endswith("__")):
                 __find_file(child_path)
     __find_file(search_path)
-    return filename_filepath
+    return file_name_path
+
+
+def find_dirs(search_path, abspath=False):
+    """
+    查找指定目录下所有目录
+    :param search_path: 查找的目录路径
+    :param abspath: 是否返回绝对路径，默认返回相对路径
+    :return:
+    """
+    dir_name_path = {}
+    if abspath:
+        search_path = os.path.abspath(search_path)
+
+    def __find_dir(_search_path):
+        names = os.listdir(_search_path)
+        for name in names:
+            child_path = os.path.join(_search_path, name)
+            # 如果是目录就保存
+            if os.path.isdir(child_path) and not (name.startswith("__") and name.endswith("__")):
+                dir_name_path.setdefault(name, child_path)
+                __find_dir(child_path)
+
+    __find_dir(search_path)
+    return dir_name_path
 
 
 def get_path_last_name(path=None):
@@ -80,12 +104,6 @@ def read_file(file) -> str:
     return msg
 
 
-def readline_file(file) -> list:
-    with open(file, "r", encoding="utf-8") as f:
-        msg = f.read().splitlines()
-    return msg
-
-
 def cover_write_file(file, msg):
     with open(file, "w") as f:
         f.write(msg)
@@ -94,3 +112,4 @@ def cover_write_file(file, msg):
 def append_write_file(file, msg):
     with open(file, "a") as f:
         f.write(msg)
+

@@ -6,25 +6,7 @@ from BeautifulReport import BeautifulReport
 from utils import file
 
 
-def generate_unittest_suite(testcase_ids: list, testcase_start_dir="test_cases"):
-    """
-    把testcase_ids中的用例加载到测试套中
-    :param testcase_ids: 用例集，list类型,用例id的格式为 module[.class[.method]]，中括号中缺省
-    :param testcase_start_dir: 测试用例的根目录，指的是项目目录下用例所在的目录
-    :return: 返回测试套
-    """
-    # 将用户输入的用例目录转换成绝对路径
-    testcase_start_dir_abspath = os.path.abspath(testcase_start_dir)
-
-    # 获取用例根目录的名称
-    testcase_dir_name = file.get_path_last_name(testcase_start_dir_abspath)
-
-    if not isinstance(testcase_ids, list):
-        raise ValueError(f"参数{testcase_ids}不是list类型")
-
-    if not os.path.exists(testcase_start_dir_abspath):
-        raise ValueError(f"用例根目录 {testcase_dir_name} 在目录{os.getcwd()}中不存在，请修改用例根目录")
-
+def register_module(register_dir, testcase_ids):
     # 根据用例id，获取所有用例的模块名称
     exist_file_modules = []
     not_exist_file_module = []
@@ -32,7 +14,7 @@ def generate_unittest_suite(testcase_ids: list, testcase_start_dir="test_cases")
         file_module = testcase_id.split(".")[0]
         # 根据文件名称查找文件，若不存在则反None
         filename = file_module + ".py"
-        file_path = file.find_file(testcase_start_dir_abspath, filename)
+        file_path = file.find_file(register_dir, filename)
         if file_path:
             exist_file_modules.append(file_module)
         else:
@@ -43,15 +25,15 @@ def generate_unittest_suite(testcase_ids: list, testcase_start_dir="test_cases")
         raise ValueError(f"这些用例模块{not_exist_file_module}不存在用例文件，请核实！")
 
     # 注册文件为用例目录下__init__.py文件
-    register_file = rf"{testcase_start_dir_abspath}\__init__.py"
+    register_file = rf"{register_dir}\__init__.py"
 
     # 校验注册文件存不存在，不存在就创建
     file.create_file(register_file)
 
     # 获取已注册的用例模块
     import_module_names = []
-    lines = file.readline_file(register_file)
-    for line in lines:
+    msg = file.read_file(register_file)
+    for line in msg.splitlines():
         name = line.split(" ")[-1]
         import_module_names.append(name)
 
@@ -67,7 +49,7 @@ def generate_unittest_suite(testcase_ids: list, testcase_start_dir="test_cases")
             if file_module not in import_module_names:
                 # 通过用例模块找到文件路径
                 filename = file_module + ".py"
-                file_path = file.find_file(testcase_start_dir_abspath, filename)
+                file_path = file.find_file(register_dir, filename)
                 file_path = file_path.split(project_path)[-1]
 
                 # 从文件路径提取目录路径
@@ -81,6 +63,36 @@ def generate_unittest_suite(testcase_ids: list, testcase_start_dir="test_cases")
 
                 # 注册用例模块
                 file.append_write_file(register_file, register_msg)
+
+
+def generate_unittest_suite(testcase_start_dir="test_cases", testcase_ids=None):
+    """
+    把testcase_ids中的用例加载到测试套中
+    :param testcase_ids: 用例集，list类型,用例id的格式为 module[.class[.method]]，中括号中缺省
+    :param testcase_start_dir: 测试用例的根目录，指的是项目目录下用例所在的目录
+    :return: 返回测试套
+    """
+    # 如果不指定用例编号，就把用例目录
+    if testcase_ids is None:
+        # 将根目录用例添加到测试套
+        suite = unittest.defaultTestLoader.discover(testcase_start_dir)
+        return suite
+
+    # 将用户输入的用例目录转换成绝对路径
+    testcase_start_dir_abspath = os.path.abspath(testcase_start_dir)
+
+    # 获取用例根目录的名称
+    testcase_dir_name = file.get_path_last_name(testcase_start_dir_abspath)
+
+    if not isinstance(testcase_ids, list):
+        raise ValueError(f"参数{testcase_ids}不是list类型")
+
+    if not os.path.exists(testcase_start_dir_abspath):
+        raise ValueError(f"用例根目录 {testcase_dir_name} 在目录{os.getcwd()}中不存在，请修改用例根目录")
+
+    # 根据用例注册在根目录注册模块
+    register_module(testcase_start_dir_abspath, testcase_ids)
+    time.sleep(1)
 
     # 将所有用例加载到测试套中
     suite = unittest.TestSuite()
