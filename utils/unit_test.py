@@ -1,6 +1,9 @@
 import os
+import time
 import unittest
-from utils.common import get_path_last_name, find_file_path
+from BeautifulReport import BeautifulReport
+
+from utils import file
 
 
 def generate_unittest_suite(testcase_ids: list, testcase_start_dir="test_cases"):
@@ -14,7 +17,7 @@ def generate_unittest_suite(testcase_ids: list, testcase_start_dir="test_cases")
     testcase_start_dir_abspath = os.path.abspath(testcase_start_dir)
 
     # 获取用例根目录的名称
-    testcase_dir_name = get_path_last_name(testcase_start_dir_abspath)
+    testcase_dir_name = file.get_path_last_name(testcase_start_dir_abspath)
 
     if not isinstance(testcase_ids, list):
         raise ValueError(f"参数{testcase_ids}不是list类型")
@@ -26,14 +29,14 @@ def generate_unittest_suite(testcase_ids: list, testcase_start_dir="test_cases")
     exist_file_modules = []
     not_exist_file_module = []
     for testcase_id in testcase_ids:
-        filename = testcase_id.split(".")[0]
-
-        # 根据模块名，查找文件，若不存在则反None
-        file_path = find_file_path(testcase_start_dir_abspath, filename)
+        file_module = testcase_id.split(".")[0]
+        # 根据文件名称查找文件，若不存在则反None
+        filename = file_module + ".py"
+        file_path = file.find_file(testcase_start_dir_abspath, filename)
         if file_path:
-            exist_file_modules.append(filename)
+            exist_file_modules.append(file_module)
         else:
-            not_exist_file_module.append(filename)
+            not_exist_file_module.append(file_module)
 
     # 校验是否存在没有用例文件的模块
     if not_exist_file_module:
@@ -42,31 +45,29 @@ def generate_unittest_suite(testcase_ids: list, testcase_start_dir="test_cases")
     # 注册文件为用例目录下__init__.py文件
     register_file = rf"{testcase_start_dir_abspath}\__init__.py"
 
-    # 校验注册文件存不存在
-    if not os.path.exists(register_file):
-        # 不存在就创建
-        with open(register_file, "w") as f:
-            pass
+    # 校验注册文件存不存在，不存在就创建
+    file.create_file(register_file)
 
     # 获取已注册的用例模块
     import_module_names = []
-    with open(register_file, "r") as f:
-        for line in f.read().splitlines():
-            name = line.split(" ")[-1]
-            import_module_names.append(name)
+    lines = file.readline_file(register_file)
+    for line in lines:
+        name = line.split(" ")[-1]
+        import_module_names.append(name)
 
     # 对列表进行排序，并校验两个列表是否相等
     exist_file_modules.sort()
     import_module_names.sort()
     if exist_file_modules != import_module_names:
         # 当前执行文件所在的目录名称
-        project_path = get_path_last_name()
+        project_path = file.get_path_last_name()
 
         # 如果不一致，找出未注册用例模块，并自动注册
         for file_module in exist_file_modules:
             if file_module not in import_module_names:
                 # 通过用例模块找到文件路径
-                file_path = find_file_path(testcase_start_dir_abspath, file_module)
+                filename = file_module + ".py"
+                file_path = file.find_file(testcase_start_dir_abspath, filename)
                 file_path = file_path.split(project_path)[-1]
 
                 # 从文件路径提取目录路径
@@ -79,8 +80,7 @@ def generate_unittest_suite(testcase_ids: list, testcase_start_dir="test_cases")
                 register_msg = f"from {file_module_path} import {file_module}\n"
 
                 # 注册用例模块
-                with open(register_file, "a") as f:
-                    f.write(register_msg)
+                file.append_write_file(register_file, register_msg)
 
     # 将所有用例加载到测试套中
     suite = unittest.TestSuite()
@@ -88,3 +88,18 @@ def generate_unittest_suite(testcase_ids: list, testcase_start_dir="test_cases")
         testcase_id = f"{testcase_dir_name}.{testcase_id}"
         suite.addTest(unittest.TestLoader().loadTestsFromName(testcase_id))
     return suite
+
+
+class Report(BeautifulReport):
+
+    def generate_report(self, description, filename: str = None, report_dir=None, log_path=None, theme='theme_default'):
+        if filename is None:
+            time_str = time.strftime("%Y%m%d%H%M%S", time.localtime())
+            filename = f"report_{time_str}"
+
+        if report_dir is None:
+            report_dir = r".\report"
+            if not os.path.exists(report_dir):
+                os.mkdir(report_dir)
+
+        self.report(description, filename, report_dir, log_path, theme)
