@@ -42,7 +42,7 @@ def register_module(register_dir, testcase_ids):
     import_module_names.sort()
     if exist_file_modules != import_module_names:
         # 当前执行文件所在的目录名称
-        project_path = file.get_path_last_name()
+        project_name = file.get_path_last_name()
 
         # 如果不一致，找出未注册用例模块，并自动注册
         for file_module in exist_file_modules:
@@ -50,7 +50,7 @@ def register_module(register_dir, testcase_ids):
                 # 通过用例模块找到文件路径
                 filename = file_module + ".py"
                 file_path = file.find_file(register_dir, filename)
-                file_path = file_path.split(project_path)[-1]
+                file_path = file_path.get(filename).split(project_name)[-1]
 
                 # 从文件路径提取目录路径
                 split_path = file_path.split(".")[0].split("\\")
@@ -92,7 +92,6 @@ def generate_unittest_suite(testcase_start_dir="test_cases", testcase_ids=None):
 
     # 根据用例注册在根目录注册模块
     register_module(testcase_start_dir_abspath, testcase_ids)
-    time.sleep(1)
 
     # 将所有用例加载到测试套中
     suite = unittest.TestSuite()

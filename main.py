@@ -1,9 +1,10 @@
 import unittest
+import time
 from utils.unit_test import generate_unittest_suite, Report
-from test_cases import __manage_testcase__
 
 if __name__ == '__main__':
-    testcase_ids = __manage_testcase__.all_case
+    # testcase_ids =
+    testcase_ids = ["weather"]
     suite = generate_unittest_suite(testcase_start_dir=r".\test_cases", testcase_ids=testcase_ids)
 
     # test_cases_dir = "test_cases/API"
