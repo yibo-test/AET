@@ -6,6 +6,16 @@ from BeautifulReport import BeautifulReport
 from utils import file
 
 
+def get_ini_info():
+    _ids = file.read_file("./config/testcase.ini").splitlines()
+    new_ids = []
+    for _id in _ids:
+        if _id.startswith(";") or _id.startswith("#") or _id == "":
+            continue
+        new_ids.append(_id)
+    return new_ids
+
+
 def register_module(register_dir, testcase_ids):
     # 根据用例id，获取所有用例的模块名称
     exist_file_modules = []
@@ -65,15 +75,15 @@ def register_module(register_dir, testcase_ids):
                 file.append_write_file(register_file, register_msg)
 
 
-def generate_unittest_suite(testcase_start_dir="test_cases", testcase_ids=None):
+def generate_unittest_suite(testcase_start_dir="test_cases", py_filenames=None):
     """
-    把testcase_ids中的用例加载到测试套中
-    :param testcase_ids: 用例集，list类型,用例id的格式为 module[.class[.method]]，中括号中缺省
+    把testcase_ids中的模块加载到测试套中
+    :param py_filenames: 用例文件，list类型,用例id的格式为 module[.class[.method]]，中括号中缺省
     :param testcase_start_dir: 测试用例的根目录，指的是项目目录下用例所在的目录
     :return: 返回测试套
     """
     # 如果不指定用例编号，就把用例目录
-    if testcase_ids is None:
+    if py_filenames is None:
         # 将根目录用例添加到测试套
         suite = unittest.defaultTestLoader.discover(testcase_start_dir)
         return suite
@@ -84,20 +94,22 @@ def generate_unittest_suite(testcase_start_dir="test_cases", testcase_ids=None):
     # 获取用例根目录的名称
     testcase_dir_name = file.get_path_last_name(testcase_start_dir_abspath)
 
-    if not isinstance(testcase_ids, list):
-        raise ValueError(f"参数{testcase_ids}不是list类型")
+    if not isinstance(py_filenames, list):
+        raise ValueError(f"参数{py_filenames}不是list类型")
 
     if not os.path.exists(testcase_start_dir_abspath):
-        raise ValueError(f"用例根目录 {testcase_dir_name} 在目录{os.getcwd()}中不存在，请修改用例根目录")
+        raise ValueError(f"用例根目录 {testcase_dir_name} 在目录{os.getcwd()}中不存在，请确认用例根目录")
 
     # 根据用例注册在根目录注册模块
-    register_module(testcase_start_dir_abspath, testcase_ids)
+    register_module(testcase_start_dir_abspath, py_filenames)
 
     # 将所有用例加载到测试套中
     suite = unittest.TestSuite()
-    for testcase_id in testcase_ids:
-        testcase_id = f"{testcase_dir_name}.{testcase_id}"
-        suite.addTest(unittest.TestLoader().loadTestsFromName(testcase_id))
+    for py_filename in py_filenames:
+        if py_filename.endswith(".py"):
+            py_filename = py_filename.split(".")[0]
+        py_filename = f"{testcase_dir_name}.{py_filename}"
+        suite.addTest(unittest.TestLoader().loadTestsFromName(py_filename))
     return suite
 
 
