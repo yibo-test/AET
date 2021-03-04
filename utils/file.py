@@ -99,6 +99,11 @@ def create_file(file):
             pass
 
 
+def delete_file(file):
+    if os.path.exists(file):
+        os.remove(file)
+
+
 def read_file(file) -> str:
     with open(file, "r", encoding="utf-8") as f:
         msg = f.read()
