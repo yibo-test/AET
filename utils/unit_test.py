@@ -1,21 +1,28 @@
 import os
 import time
 import unittest
+import configparser
 from BeautifulReport import BeautifulReport
 
 from utils import file
+from utils import constants
 
 
-def get_case_filename(config_path=r".\config\testcase.ini", case_file_path=r".\test_cases"):
-    """获取有效用例文件名"""
+def get_case_filename(execute_case_config_path=r".\config\testcase.ini", case_file_path=r".\test_cases"):
+    """
+    获取有效用例文件名
+    :param execute_case_config_path: 用例执行范围的配置文件
+    :param case_file_path: 读取用例的根目录
+    :return: {"py_case_filename": [py文件名称,], "api_case_filename": [非py文件名称,]}
+    """
 
-    if not os.path.exists(config_path):
-        raise ValueError(f"用例配置文件 {config_path} 在目录{os.getcwd()}中不存在，请确认！")
+    if not os.path.exists(execute_case_config_path):
+        raise ValueError(f"用例配置文件 {execute_case_config_path} 在目录{os.getcwd()}中不存在，请确认！")
 
     if not os.path.exists(case_file_path):
         raise ValueError(f"用例根目录 {case_file_path} 在目录{os.getcwd()}中不存在，请确认！")
 
-    case_files = file.read_file(config_path).splitlines()
+    case_files = file.read_file(execute_case_config_path).splitlines()
     # 分离配置文件中的py文件和非py文件
     py_case_filename = []
     api_case_filename = []
@@ -71,7 +78,7 @@ def register_module(register_dir, py_filenames):
         file.append_write_file(register_file, register_msg)
 
 
-def generate_pyfile_case_suite(testcase_start_dir="test_cases", py_filenames=None):
+def generate_pyfile_case_suite(py_filenames=None, testcase_start_dir="test_cases"):
     """
     将py文件中的用例添加到测试套
     :param testcase_start_dir: 测试用例的根目录，指的是项目目录下用例所在的目录
@@ -108,8 +115,37 @@ def generate_pyfile_case_suite(testcase_start_dir="test_cases", py_filenames=Non
     return suite
 
 
-def generate_api_case_suite(api_demo_id_path="utils.api_demo"):
-    suite = unittest.TestLoader().loadTestsFromName(api_demo_id_path)
+def set_ddt_data(api_filenames):
+    config = configparser.ConfigParser()
+    config.clear()
+
+    for api_filename in api_filenames:
+        api_filepath = file.find_file(r".\test_cases", filename=api_filename).get(api_filename)
+        config.read(api_filepath, encoding="utf-8")
+
+    api_case_ids = config.sections()
+    ddt_data = []
+    for api_case_id in api_case_ids:
+        case_info = {}
+        case_info.setdefault("case_name", api_case_id)
+        case_info.update(dict(config[api_case_id]))
+
+        # 如果没有，就增加默认值
+        case_info.setdefault("description", '')
+        case_info.setdefault("method", "get")
+        case_info.setdefault("headers", '')
+        case_info.setdefault("data", '')
+        case_info.setdefault("result_type", 'json')
+        case_info.setdefault("expect_result", '')
+
+        ddt_data.append(case_info)
+
+    constants.DDT_DATA = ddt_data
+
+
+def generate_api_case_suite(api_filenames=None, case_builder_path="utils.request_api"):
+    set_ddt_data(api_filenames)
+    suite = unittest.TestLoader().loadTestsFromName(case_builder_path)
     return suite
 
 
