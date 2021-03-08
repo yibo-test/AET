@@ -2,7 +2,7 @@ import unittest
 from utils import unit_test
 
 
-if __name__ == '__main__':
+def run():
     # 读取用例配置文件中的信息
     dict_case_filename = unit_test.get_case_filename(execute_case_config_path=r".\config\testcase.ini", case_file_path=r".\test_cases")
 
