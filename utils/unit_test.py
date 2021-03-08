@@ -2,8 +2,8 @@ import os
 import time
 import unittest
 import configparser
-from BeautifulReport import BeautifulReport
 
+from libs.BeautifulReport import BeautifulReport
 from utils import file
 from utils import constants
 
@@ -135,8 +135,9 @@ def set_ddt_data(api_filenames):
         case_info.setdefault("method", "get")
         case_info.setdefault("headers", '')
         case_info.setdefault("data", '')
-        case_info.setdefault("result_type", 'json')
+        case_info.setdefault("response_type", 'json')
         case_info.setdefault("expect_result", '')
+        case_info.setdefault("variable", None)
 
         ddt_data.append(case_info)
 

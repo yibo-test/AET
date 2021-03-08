@@ -45,13 +45,14 @@ class Browser(Chrome, Firefox):
     def browser_version(self):
         return self.capabilities["browserVersion"]
 
-    def until_find_element(self, by, value, times=10, wait_time=1):
+    def until_find_element(self, by, value, times=10, wait_time=1, flash=True):
         """
         用于定位元素
         :param by: 定位元素的方式
         :param value: 定位元素的值
         :param times: 定位元素的重试次数
         :param wait_time: 定位元素失败的等待时间
+        :param flash: 闪烁显示定位到的元素
         :return: 返回定位的元素
         """
         # 检查by的合法性
@@ -88,6 +89,16 @@ class Browser(Chrome, Firefox):
             else:
                 # 如果成功定位元素则返回元素
                 logging.info(""f"通过{by}成功定位元素【{value}】！")
+
+                # 实现元素边框闪烁
+                if flash is True:
+                    for i in range(3):
+                        js = 'element = arguments[0].style.setProperty("border", "4px solid red");'
+                        self.execute_script(js, el)
+                        time.sleep(0.5)
+                        js = 'element = arguments[0].style.removeProperty("border");'
+                        self.execute_script(js, el)
+                        time.sleep(0.5)
                 return el
 
         # 如果循环完仍为定位到元素，则抛错

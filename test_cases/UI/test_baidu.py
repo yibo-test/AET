@@ -22,7 +22,7 @@ class Baidu(unittest.TestCase):
         logging.info("关闭浏览器")
 
     def test_search(self):
-        """ 测试百度搜索框输入selenium能搜索出包含selenium相关的信息 """
+        """测试百度搜索框输入selenium能搜索出包含selenium相关的信息"""
         logging.info("用例1：测试百度搜索框输入selenium能搜索出包含selenium相关的信息")
 
         # 输入搜索信息
@@ -39,7 +39,7 @@ class Baidu(unittest.TestCase):
         self.assertIsNotNone(els)
 
     def test_access_game_news(self):
-        """ 测试通过百度首页能进入新闻界面的游戏专题 """
+        """测试通过百度首页能进入新闻界面的游戏专题"""
         logging.info("用例2：测试通过百度首页能进入新闻界面的游戏专题")
 
         # 点击新闻链接
