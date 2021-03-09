@@ -96,7 +96,7 @@ class Api(unittest.TestCase):
 
     @ddt.data(*DDT_DATA)
     @ddt.unpack
-    def test_case(self, case_name, description, method, url, headers, data, response_type, expect_result, variable):
+    def test_case(self, case_id, description, method, url, headers, data, response_type, expect_result, variable):
         """{description}"""
         # 转换变量
         url = conversion_global_var(url, GLOBAL_VAR)
@@ -108,20 +108,28 @@ class Api(unittest.TestCase):
 
         # print的内容会在报告中显示
         print(f"请求方式：{method}\n"
-              f"请求地址：{url}\n"
-              f"请求头部：{headers}\n"
-              f"请求数据：{data}\n"
-              f"响应类型：{response_type}\n"
+              f"请求地址：{url}")
+        if headers:
+            print(f"请求头部：{headers}")
+        if data:
+            print(f"请求数据：{data}\n")
+        print(f"响应类型：{response_type}\n"
               f"预期结果：{expect_result}")
 
+        # 发送请求
         ret = requests.request(method, url, headers=headers, data=data)
         ret.encoding = ret.apparent_encoding    # 处理中文异常
+
+        # 校验响应类型是否合法
+        allow_response_type = ["json", "text", "str"]
+        if response_type.lower() not in allow_response_type:
+            raise ValueError(f"用例【{case_id}】的response_type的值非法，请输入有效值：{'，'.join(allow_response_type)}")
 
         # 处理json结果
         if response_type.lower() == "json":
             response_result = ret.json()
             print(f"响应结果：{response_result}")
-            logging.info(f"【{case_name}】的执行结果为：{response_result}")
+            logging.info(f"【{case_id}】的执行结果为：{response_result}")
 
             # 预期结果不是json格式，抛错
             try:
@@ -139,8 +147,6 @@ class Api(unittest.TestCase):
                 split_json_path = json_path.split("$.")
                 # 获取断言方式
                 assert_method = split_json_path[0].lower()
-                if assert_method == '':
-                    raise ValueError('expect_result的预期值请按 {"assert_method$jsonPath":"预期值"} 的格式填写')
 
                 # 获取预期结果值
                 expect_result_value = expect_result.get(json_path)
@@ -151,12 +157,18 @@ class Api(unittest.TestCase):
                     response_result_value = response_result_value.get(k)
 
                 # 断言结果
-                self.assert_result(assert_method, expect_result_value, response_result_value, json_path)
+                self.assert_json_result(assert_method, expect_result_value, response_result_value, json_path)
 
             # 设置全局变量
-            set_global_var(case_name, response_result, variable)
+            set_global_var(case_id, response_result, variable)
 
-    def assert_result(self, assert_method, expect_result_value, response_result_value, json_path):
+        # 处理文本类型
+        elif response_type.lower() in ["str", "text"]:
+            response_result = ret.text
+            print(f"响应结果：{response_result}")
+            self.assert_text_result(expect_result, response_result)
+
+    def assert_json_result(self, assert_method, expect_result_value, response_result_value, json_path):
         """
         断言预期结果与实际结果，断言方式如下
         等于："equal", "eq", "等于", "="
@@ -169,7 +181,7 @@ class Api(unittest.TestCase):
         小于等于："lessequal", "<=", "小于等于"
         """
         # 根据断言方式断言结果
-        if assert_method in ["equal", "eq", "等于", "="]:
+        if assert_method in ["equal", "eq", "等于", "=", ""]:
             self.assertEqual(expect_result_value, response_result_value,
                              msg=f"断言结果=====>【{json_path}】的提取值【{response_result_value}】，预期等于【{expect_result_value}】，实际不等于")
         elif assert_method in ["notequal", "neq", "不等于", "!="]:
@@ -205,5 +217,29 @@ class Api(unittest.TestCase):
                 self.assertLessEqual(response_result_value, expect_result_value,
                                      msg=f"断言结果=====>【{json_path}】的提取值【{response_result_value}】，预期小于等于【{expect_result_value}】，实际不小于等于")
         else:
-            raise ValueError(f'暂不支持该【{assert_method}】断言方式！')
+            raise ValueError(f'json响应类型暂不支持【{assert_method}】断言方式！')
+
+    def assert_text_result(self, expect_result, response_result):
+        # 如果不是以中括号开头并结尾的预期结果，则当成字符串直接断言
+        if not (expect_result.startswith("[") and expect_result.endswith("]")):
+            self.assertIn(expect_result, response_result, msg=f"断言结果=====>预期响应结果【{response_result}】包含【{expect_result}】,实际不包含")
+
+        # 如果是中括号开头并结尾的预期结果，则转换成列表进行循环断言
+        else:
+            re_ret = re.search(r"\[(.+)\]", expect_result).group(1)
+            # 如果以中括号开头，又未匹配到数据，则抛错
+            if not re_ret:
+                raise ValueError(f"预期结果以中括号开头或结尾，但是正则未匹配到信息，请检查！")
+
+            # 如果以 ", "分离数据则以此切割数据
+            if ", " in re_ret:
+                expect_result_list = re_ret.split(", ")
+            elif "," in re_ret:
+                expect_result_list = re_ret.split(",")
+            else:
+                raise ValueError(f"预期结果以中括号开头或结尾，但是数据未以逗号分隔！")
+
+            # 根据切割后的列表，循环断言结果
+            for er in expect_result_list:
+                self.assertIn(er, response_result, msg=f"断言结果=====>预期响应结果【{response_result}】包含【{er}】,实际不包含")
 

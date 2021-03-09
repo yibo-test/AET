@@ -116,36 +116,52 @@ def generate_pyfile_case_suite(py_filenames=None, testcase_start_dir="test_cases
 
 
 def set_ddt_data(api_filenames):
+    """解析非py文件，并将解析数据保存到constants文件中的DDT_DATA变量"""
+    # 创建配置实例对象
     config = configparser.ConfigParser()
     config.clear()
 
+    # 读取所有用例文件，并将读取的信息存到配置实例对象中
     for api_filename in api_filenames:
         api_filepath = file.find_file(r".\test_cases", filename=api_filename).get(api_filename)
         config.read(api_filepath, encoding="utf-8")
 
+    # 获取所有section，并将每个section解析dict类型，并增加每个section中缺少的信息
     api_case_ids = config.sections()
     ddt_data = []
     for api_case_id in api_case_ids:
-        case_info = {}
-        case_info.setdefault("case_name", api_case_id)
-        case_info.update(dict(config[api_case_id]))
+        case_info = dict(config[api_case_id])
 
-        # 如果没有，就增加默认值
-        case_info.setdefault("description", '')
+        # 如果没定义用例ID，就增加
+        case_info.setdefault("case_id", api_case_id)
+
+        case_info_var_names = case_info.keys()
+        for case_info_var_name in case_info_var_names:
+            allow_var = ["case_id", "description", "method", "url", "headers", "data", "response_type", "expect_result", "variable"]
+            if case_info_var_name not in allow_var:
+                raise ValueError(f"用例【{api_case_id}】使用非法变量名：{case_info_var_name}，请输入有效变量名:{', '.join(allow_var)}")
+
+        # 用例中没有定义字段，就增加
+        case_info.setdefault("description", "")
         case_info.setdefault("method", "get")
+        case_info.setdefault("url", "")
         case_info.setdefault("headers", '')
         case_info.setdefault("data", '')
-        case_info.setdefault("response_type", 'json')
-        case_info.setdefault("expect_result", '')
+        case_info.setdefault("response_type", "json")
+        case_info.setdefault("expect_result", "")
         case_info.setdefault("variable", None)
 
         ddt_data.append(case_info)
-
+    # 将所有用例文件添加到全局变量中
     constants.DDT_DATA = ddt_data
 
 
 def generate_api_case_suite(api_filenames=None, case_builder_path="utils.request_api"):
+    """解析非py文件，并生成测试套"""
+    # 解析非py文件
     set_ddt_data(api_filenames)
+
+    # 利用ddt，在utils.request_api模块中生成方法，使用unittest的方法生成测试套
     suite = unittest.TestLoader().loadTestsFromName(case_builder_path)
     return suite
 

@@ -24,12 +24,12 @@ class Browser(Chrome, Firefox):
         # 根据browser_type值选择对应的驱动
         if self.__browser_type == "chrome":
             if driver_path:
-                Chrome.__init__(self, executable_path=f"{driver_path}/chromedriver.exe", *args, **kwargs)
+                Chrome.__init__(self, executable_path=driver_path, *args, **kwargs)
             else:
                 Chrome.__init__(self, *args, **kwargs)
         elif self.__browser_type == "firefox":
             if driver_path:
-                Firefox.__init__(self, executable_path=f"{driver_path}/geckodriver.exe", *args, **kwargs)
+                Firefox.__init__(self, executable_path=driver_path, *args, **kwargs)
             else:
                 Firefox.__init__(self, *args, **kwargs)
 
